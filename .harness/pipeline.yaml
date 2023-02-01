@@ -46,7 +46,7 @@ pipeline:
                     connectorRef: dockerhub
                     repo: motoskia/ciquickstart
                     tags:
-                      - +pipeline.sequenceId
+                      - v1
               - step:
                   type: Run
                   name: test connection to server
