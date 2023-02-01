@@ -1,0 +1,68 @@
+pipeline:
+  name: Demo
+  identifier: Demo
+  projectIdentifier: Default_Project_1656138693611
+  orgIdentifier: default
+  tags: {}
+  stages:
+    - stage:
+        name: demo-ci
+        identifier: democi
+        description: ""
+        type: CI
+        spec:
+          cloneCodebase: true
+          platform:
+            os: Linux
+            arch: Amd64
+          runtime:
+            type: Cloud
+            spec: {}
+          execution:
+            steps:
+              - step:
+                  type: Run
+                  name: Run Unit Tests
+                  identifier: Run_Unit_Tests
+                  spec:
+                    connectorRef: dockerhub
+                    image: golang:1.15
+                    shell: Sh
+                    command: |-
+                      go get gotest.tools/gotestsum  
+                      gotestsum --format=standard-verbose --junitfile unit-tests.xml || true  
+                      CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -a -tags netgo
+                    reports:
+                      type: JUnit
+                      spec:
+                        paths:
+                          - "*.xml"
+                    imagePullPolicy: IfNotPresent
+              - step:
+                  type: BuildAndPushDockerRegistry
+                  name: Build and Push an image to Docker Registry_1
+                  identifier: BuildandPushanimagetoDockerRegistry_1
+                  spec:
+                    connectorRef: dockerhub
+                    repo: motoskia/ciquickstart
+                    tags:
+                      - +pipeline.sequenceId
+              - step:
+                  type: Run
+                  name: test connection to server
+                  identifier: test_connection_to_server
+                  spec:
+                    connectorRef: dockerhub
+                    image: curlimages/curl:7.73.0
+                    shell: Sh
+                    command: |-
+                      sleep 10  
+                      curl localhost:8080  
+                      curl localhost:8080?Hello!_I_am_a_nice_demo!
+        variables: []
+  properties:
+    ci:
+      codebase:
+        connectorRef: Demorepo
+        repoName: harness-goHelloWorldServer
+        build: <+input>
